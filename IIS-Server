@@ -1,0 +1,61 @@
+#######################################################################
+####                         EXTENTIONS                           #####
+#######################################################################
+
+<Extension _gelf>
+    Module      xm_gelf
+</Extension>
+
+<Extension _json>
+    Module      xm_json
+</Extension>
+
+#######################################################################
+####                         IIS NXLOG                           ######
+#######################################################################
+
+<Extension w3c>
+    Module	xm_csv
+    Fields	$date, $time, $s_ip, $cs_method, $cs_uri_stem, $cs_uri_query, $s_port, $cs_username, $c_ip, $cs_User_Agent, $cs_Referer, $sc_status, $sc_substatus, $sc_win32_status, $time_taken
+    FieldTypes	string, string, string, string, string, string, string, string, string, string, string, string, string, string, string
+    Delimiter 		' '
+    QuoteChar 		'"'
+    EscapeControl 	FALSE
+    UndefValue 		-
+</Extension>
+
+<Input iis>
+	Module   im_file
+    File     "C:\inetpub\logs\LogFiles\W3SVC1\u_ex*" #log file directory
+    SavePos  TRUE
+
+    Exec if $raw_event =~/^#/ drop();\
+       else\
+       {\
+        w3c->parse_csv();\
+        $EventTime = parsedate($date + " " + $time);\
+	$EventTime = parsedate($date + " " + $time + "Z");\
+        $SourceName = "IIS";\
+	$raw_event = to_json();\
+       }
+</Input>
+
+<Output graylog>
+	Module om_tcp # gelf-tcp
+	Host 192.168.170.131 #graylog-ip-adress
+	Port 12201 #graylog-port number  
+	OutputType GELF
+
+	Exec        $Hostname = hostname_fqdn();
+        Exec        $raw_event =$Hostname + ' IIS-NXLOG ' + $raw_event;
+        #Use the following line for debugging (uncomment the fileop extension above as well)
+	#Exec file_write("C:\\Program Files (x86)\\nxlog\\data\\nxlog_output.log", $raw_event);
+</Output>
+
+<Route iis-to-graylog>
+	Path		iis => graylog
+</Route>
+
+#######################################################################
+####                         /IIS NXLOG                           #####
+#######################################################################
