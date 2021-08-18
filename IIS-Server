@@ -26,7 +26,7 @@
 
 <Input iis>
 	Module   im_file
-    File     "C:\inetpub\logs\LogFiles\W3SVC1\u_ex*"
+    File     "C:\inetpub\logs\LogFiles\W3SVC1\u_ex*" #IIS log directory
     SavePos  TRUE
 
     Exec if $raw_event =~/^#/ drop();\
