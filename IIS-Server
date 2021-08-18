@@ -5,7 +5,7 @@
 <Extension _gelf>
     Module      xm_gelf
 </Extension>
-
+ 
 <Extension json>
     Module    xm_json
 </Extension>
